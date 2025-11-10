@@ -83,7 +83,7 @@ module "fortigate_scaleset" {
     "fortinet_fg-vm%s%s%s",
     each.value.license_type == "payg" ? "_payg_2023" : "",
     try(each.value.architecture, "") == "Arm64" ? "_arm64" : "",
-    contains(["7.6.1", "7.6.2"], each.value.image_version) ? "_g2" : ""
+    contains(["7.6.1", "7.6.2", "7.6.3", "7.6.4"], each.value.image_version) ? "_g2" : ""
   )
 
   license_type = try(each.value.license_type, "byol")

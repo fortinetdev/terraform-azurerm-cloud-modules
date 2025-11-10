@@ -57,16 +57,15 @@ module "fortigate_scaleset" {
   storage_account_creation_flag = try(each.value.storage_account_creation_flag, true)
   vmss_name                     = try(each.value.vmss_name, "fortigate-scaleset")
   image_version                 = try(each.value.image_version, "7.2.8")
+  license_type                  = try(each.value.license_type, "byol")
   # image_sku                     = format("fortinet_fg-vm%s%s", each.value.license_type == "payg" ? "_payg_2023" : "", try(each.value.architecture, "") == "Arm64" ? "_arm64" : "")
 
   image_sku = format(
     "fortinet_fg-vm%s%s%s",
     each.value.license_type == "payg" ? "_payg_2023" : "",
     try(each.value.architecture, "") == "Arm64" ? "_arm64" : "",
-    contains(["7.6.1", "7.6.2"], each.value.image_version) ? "_g2" : ""
+    contains(["7.6.1", "7.6.2", "7.6.3", "7.6.4"], each.value.image_version) ? "_g2" : ""
   )
-
-  license_type = try(each.value.license_type, "byol")
 
   application_insights_id = try(each.value.application_insights_id, null)
   network_interfaces = [for interface in each.value.network_interfaces :

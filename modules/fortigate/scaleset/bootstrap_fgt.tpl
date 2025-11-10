@@ -37,6 +37,7 @@ end
 
 config router static
     edit 0
+        set distance 5
         set dst 168.63.129.16 255.255.255.255
         set gateway ${private_interface_gateway_ip_address}
         set device ${coalesce(private_interface_name, "port2")}
@@ -47,6 +48,7 @@ config router static
         set device ${coalesce(public_interface_name, "port1")}
     next
     edit 0
+        set distance 5
         set dst 168.63.129.16 255.255.255.255
         set gateway ${public_interface_gateway_ip_address}
         set device ${coalesce(public_interface_name, "port1")}

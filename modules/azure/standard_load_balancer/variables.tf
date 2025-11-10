@@ -36,13 +36,13 @@ variable "frontend_ips" {
         - protocol                  - (Required|string) Protocol used for communication, possible values are 'Tcp', 'Udp' or 'All'.
         - port                      - (Required|string) Communication port, this is both the front and the backend port.
         - backend_port              - (Optional|string) The backend port to forward traffic to the backend pool.
-        - enable_floating_ip        - (Optional|string) Enables floating IP for the rule. A "floating” IP is reassigned to a secondary server in case the primary server fails. The default value is `true`.
-        - load_distribution         - (Optional|string) Specifies the load balancing distribution type to be used by the Load Balancer. Possible values are: `Default`. The load balancer is configured to use a 5 tuple hash to map traffic to available servers.
+        - floating_ip_enabled        - (Optional|string) Enables floating IP for the rule. A "floating” IP is reassigned to a secondary server in case the primary server fails. The default value is `true`.
+        - load_distribution         - (Optional|string) Specifies the load balancing distribution type to be used by the Load Balancer. Possible values are: `Default`, `SourceIP`, `SourceIPProtocol`. Defaults to `Default`.
 
       Options for outbound_rules:
         - protocol                  - (Optional|string) Protocol used for communication, possible values are 'Tcp', 'Udp' or 'All'. Possible values are `All`, `Tcp` and `Udp`.
         - allocated_outbound_ports  - (Optional|string) Number of ports allocated per instance. The default is `1024`.
-        - enable_tcp_reset          - (Optional|boolean) Is TCP Reset enabled for this Load Balancer Rule? The default is `False`.
+        - tcp_reset_enabled          - (Optional|boolean) Is TCP Reset enabled for this Load Balancer Rule? The default is `False`.
         - idle_timeout_in_minutes   - (Optional|boolean) Specifies the idle timeout in minutes for TCP connections. Valid values are between 4 and 30 minutes.
 
       For more information, please visit https://registry.terraform.io/providers/hashicorp/azurerm/3.62.0/docs/resources/lb_rule
@@ -55,12 +55,12 @@ variable "frontend_ips" {
       gwlb_key         = "gwlb"
       inbound_rules = {
         http = {
-        enable_floating_ip = false
+        floating_ip_enabled = false
         port               = 80
         protocol           = "Tcp"
         }
         https = {
-          enable_floating_ip = false
+          floating_ip_enabled = false
           port               = 443
           protocol           = "Tcp"
         }

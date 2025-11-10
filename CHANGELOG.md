@@ -1,4 +1,10 @@
-## 1.0.4 (Unreleased)
+## 1.0.5 (Unreleased)
+
+## 1.0.4(Nov. 7, 2025)
+IMPROVEMENTS:
+
+* Enhanced the authentication logic to ensure compatibility with FortiOS 7.6.4 and newer versions.
+* Introduced additional documentation to guide version upgrades within the autoscale group examples.
 
 ## 1.0.3 (May 30, 2025)
 IMPROVEMENTS:

@@ -1,9 +1,9 @@
 locals {
-  handle_scale_event_endpoint = var.license_type == "byol" ? format(
+  handle_scale_event_endpoint = format(
     "https://%s/api/handle_auto_scale_events?code=%s",
-    azurerm_linux_function_app.function_app[0].default_hostname,
-    data.azurerm_function_app_host_keys.function_app_keys[0].default_function_key,
-  ) : ""
+    azurerm_linux_function_app.function_app.default_hostname,
+    data.azurerm_function_app_host_keys.function_app_keys.default_function_key
+  )
   fortinet_sku_to_versions_map = jsondecode(data.local_file.fortinet_sku_to_versions_map_file.content)
   image_version_valid          = contains(local.fortinet_sku_to_versions_map[var.image_sku], var.image_version)
 
@@ -144,11 +144,8 @@ resource "azurerm_monitor_autoscale_setting" "autoscale_setting" {
     email {
       custom_emails = var.autoscale_notification_emails
     }
-    dynamic "webhook" {
-      for_each = var.license_type == "byol" ? ["one"] : []
-      content {
-        service_uri = local.handle_scale_event_endpoint
-      }
+    webhook {
+      service_uri = local.handle_scale_event_endpoint
     }
   }
 
@@ -156,7 +153,6 @@ resource "azurerm_monitor_autoscale_setting" "autoscale_setting" {
 }
 
 resource "azurerm_log_analytics_workspace" "log_analytics_workspace" {
-  count               = var.license_type == "byol" ? 1 : 0
   name                = "${var.vmss_name}-law"
   location            = var.location
   resource_group_name = var.resource_group_name
@@ -164,20 +160,18 @@ resource "azurerm_log_analytics_workspace" "log_analytics_workspace" {
   retention_in_days   = 30
 
   tags = var.tags
-
 }
 
 resource "azurerm_application_insights" "app_insights" {
-  count               = var.license_type == "byol" ? 1 : 0
   name                = "${var.vmss_name}-appinsights"
   location            = var.location
   resource_group_name = var.resource_group_name
-  workspace_id        = azurerm_log_analytics_workspace.log_analytics_workspace[0].id
+  workspace_id        = azurerm_log_analytics_workspace.log_analytics_workspace.id
   application_type    = "web"
 }
 
 resource "random_string" "random_storage_account_name" {
-  count   = var.license_type == "byol" && var.storage_account_creation_flag ? 1 : 0
+  count   = var.storage_account_creation_flag ? 1 : 0
   length  = 10
   upper   = false
   special = false
@@ -185,7 +179,7 @@ resource "random_string" "random_storage_account_name" {
 
 # Create a new storage account if none is provided
 resource "azurerm_storage_account" "new_account" {
-  count                    = var.license_type == "byol" && var.storage_account_creation_flag ? 1 : 0
+  count                    = var.storage_account_creation_flag ? 1 : 0
   name                     = "fgtvmss${random_string.random_storage_account_name[0].result}"
   resource_group_name      = var.resource_group_name
   location                 = var.location
@@ -194,15 +188,13 @@ resource "azurerm_storage_account" "new_account" {
 }
 
 data "azurerm_storage_account" "account" {
-  count               = var.license_type == "byol" ? 1 : 0
   resource_group_name = var.resource_group_name
   name                = var.storage_account_creation_flag ? azurerm_storage_account.new_account[0].name : var.storage_account_name
   depends_on          = [azurerm_storage_account.new_account]
 }
 
 data "azurerm_storage_account_sas" "account_sas" {
-  count             = var.license_type == "byol" ? 1 : 0
-  connection_string = data.azurerm_storage_account.account[0].primary_connection_string
+  connection_string = data.azurerm_storage_account.account.primary_connection_string
   https_only        = true
   resource_types {
     service   = true
@@ -237,7 +229,6 @@ data "azurerm_storage_account_sas" "account_sas" {
 
 # App Service: Service Plan.
 resource "azurerm_service_plan" "plan" {
-  count               = var.license_type == "byol" ? 1 : 0
   name                = "${var.vmss_name}-appserviceplan"
   resource_group_name = var.resource_group_name
   location            = var.location
@@ -246,24 +237,22 @@ resource "azurerm_service_plan" "plan" {
 }
 
 resource "random_string" "random_function_app_name" {
-  count   = var.license_type == "byol" ? 1 : 0
   length  = 6
   upper   = false
   special = false
 }
 
 resource "azurerm_linux_function_app" "function_app" {
-  count                      = var.license_type == "byol" ? 1 : 0
-  name                       = "${var.vmss_name}-func-${random_string.random_function_app_name[0].result}"
+  name                       = "${var.vmss_name}-func-${random_string.random_function_app_name.result}"
   resource_group_name        = var.resource_group_name
   location                   = var.location
-  service_plan_id            = azurerm_service_plan.plan[0].id
-  storage_account_name       = data.azurerm_storage_account.account[0].name
-  storage_account_access_key = data.azurerm_storage_account.account[0].primary_access_key
+  service_plan_id            = azurerm_service_plan.plan.id
+  storage_account_name       = data.azurerm_storage_account.account.name
+  storage_account_access_key = data.azurerm_storage_account.account.primary_access_key
 
   site_config {
     application_stack {
-      python_version = "3.11"
+      python_version = "3.12"
     }
   }
 
@@ -272,17 +261,17 @@ resource "azurerm_linux_function_app" "function_app" {
   }
 
   app_settings = {
-    "AzureWebJobsStorage"                   = data.azurerm_storage_account.account[0].primary_blob_connection_string
-    "WEBSITE_RUN_FROM_PACKAGE"              = "https://${data.azurerm_storage_account.account[0].name}.blob.core.windows.net/${azurerm_storage_container.container[0].name}/${azurerm_storage_blob.function_blob[0].name}?${data.azurerm_storage_account_sas.account_sas[0].sas}"
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.app_insights[0].connection_string
+    "AzureWebJobsStorage"                   = data.azurerm_storage_account.account.primary_blob_connection_string
+    "WEBSITE_RUN_FROM_PACKAGE"              = "https://${data.azurerm_storage_account.account.name}.blob.core.windows.net/${azurerm_storage_container.container.name}/${azurerm_storage_blob.function_blob.name}?${data.azurerm_storage_account_sas.account_sas.sas}"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.app_insights.connection_string
     "FUNCTIONS_WORKER_RUNTIME"              = "python"
     "FUNCTIONS_EXTENSION_VERSION"           = "~4"
     "AZURE_SUBSCRIPTION_ID"                 = var.azure_subscription_id
     "RESOURCE_GROUP_NAME"                   = var.resource_group_name
     "VMSS_NAME"                             = var.vmss_name
-    "STORAGE_CONTAINER_NAME"                = azurerm_storage_container.container[0].name
-    "STORAGE_ACCOUNT_NAME"                  = data.azurerm_storage_account.account[0].name
-    "STORAGE_SAS_CONFIG"                    = data.azurerm_storage_account_sas.account_sas[0].sas
+    "STORAGE_CONTAINER_NAME"                = azurerm_storage_container.container.name
+    "STORAGE_ACCOUNT_NAME"                  = data.azurerm_storage_account.account.name
+    "STORAGE_SAS_CONFIG"                    = data.azurerm_storage_account_sas.account_sas.sas
     "PRIVATE_INTERFACE_NAME"                = length(local.private_interface_names) == 1 ? local.private_interface_names[0] : ""
     "GWLB_FRONTEND_IP_ADDRESS"              = length(local.lb_frontend_ip_addresses) == 1 ? local.lb_frontend_ip_addresses[0] : ""
     "FORTIGATE_INSTANCE_USER_NAME"          = var.fortigate_username
@@ -294,6 +283,7 @@ resource "azurerm_linux_function_app" "function_app" {
     "FORTIFLEX_CONFIG_ID"                   = var.fortiflex_config_id
     "FORTIFLEX_RETRIEVE_MODE"               = var.fortiflex_retrieve_mode
     "USE_FMG_INTEGRATION"                   = var.fmg_integration != null
+    "LICENSE_TYPE"                          = var.license_type
   }
 
   identity {
@@ -304,8 +294,7 @@ resource "azurerm_linux_function_app" "function_app" {
 }
 
 data "azurerm_function_app_host_keys" "function_app_keys" {
-  count               = var.license_type == "byol" ? 1 : 0
-  name                = azurerm_linux_function_app.function_app[0].name
+  name                = azurerm_linux_function_app.function_app.name
   resource_group_name = var.resource_group_name
 
   depends_on = [azurerm_linux_function_app.function_app]
@@ -313,27 +302,23 @@ data "azurerm_function_app_host_keys" "function_app_keys" {
 
 # Assign Reader role to Function App's Managed Identity
 resource "azurerm_role_assignment" "role_assignment" {
-  count                = var.license_type == "byol" ? 1 : 0
-  principal_id         = azurerm_linux_function_app.function_app[0].identity[0].principal_id
+  principal_id         = azurerm_linux_function_app.function_app.identity[0].principal_id
   role_definition_name = "Reader"
   scope                = azurerm_linux_virtual_machine_scale_set.vmss.id
 }
 
 # Define a storage container for function code
 resource "azurerm_storage_container" "container" {
-  count                 = var.license_type == "byol" ? 1 : 0
   name                  = "function-code"
-  storage_account_id    = data.azurerm_storage_account.account[0].id
+  storage_account_id    = data.azurerm_storage_account.account.id
   container_access_type = "private"
-
 }
 
 # Upload the Function App package to the storage account
 resource "azurerm_storage_blob" "function_blob" {
-  count                  = var.license_type == "byol" ? 1 : 0
   name                   = "functionapp.zip"
-  storage_account_name   = data.azurerm_storage_account.account[0].name
-  storage_container_name = azurerm_storage_container.container[0].name
+  storage_account_name   = data.azurerm_storage_account.account.name
+  storage_container_name = azurerm_storage_container.container.name
   type                   = "Block"
   source                 = "${path.module}/function_app.zip"
 
@@ -344,16 +329,15 @@ resource "azurerm_storage_blob" "function_blob" {
 
 # Upload all file type licenses to the container
 resource "azurerm_storage_blob" "fortigate_licenses" {
-  for_each               = var.license_type == "byol" && var.fortigate_license_folder_path != null ? fileset(var.fortigate_license_folder_path, "*.lic") : []
+  for_each               = var.fortigate_license_folder_path != null ? fileset(var.fortigate_license_folder_path, "*.lic") : []
   name                   = "licenses/${each.value}"
-  storage_account_name   = data.azurerm_storage_account.account[0].name
-  storage_container_name = azurerm_storage_container.container[0].name
+  storage_account_name   = data.azurerm_storage_account.account.name
+  storage_container_name = azurerm_storage_container.container.name
   type                   = "Block"
   source                 = "${var.fortigate_license_folder_path}/${each.value}"
 }
 
 data "http" "function_health_check" {
-  count              = var.license_type == "byol" ? 1 : 0
   url                = local.handle_scale_event_endpoint
   method             = "POST"
   request_body       = "{\"reason\": \"TFE health check\"}"

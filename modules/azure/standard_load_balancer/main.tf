@@ -95,9 +95,9 @@ resource "azurerm_lb_rule" "in_rules" {
   backend_port                   = coalesce(try(each.value.rule.backend_port, null), each.value.rule.port)
   frontend_ip_configuration_name = each.value.frontend_key
   frontend_port                  = each.value.rule.port
-  enable_floating_ip             = try(each.value.rule.enable_floating_ip, true)
+  floating_ip_enabled            = try(each.value.rule.floating_ip_enabled, true)
   disable_outbound_snat          = local.disable_outbound_snat
-  load_distribution              = try(each.value.rule.load_distribution, null)
+  load_distribution              = try(each.value.rule.load_distribution, "SourceIPProtocol")
 }
 
 resource "azurerm_lb_outbound_rule" "out_rules" {
@@ -106,7 +106,7 @@ resource "azurerm_lb_outbound_rule" "out_rules" {
   loadbalancer_id          = azurerm_lb.lb.id
   backend_address_pool_id  = azurerm_lb_backend_address_pool.lb_backend.id
   protocol                 = each.value.rule.protocol
-  enable_tcp_reset         = each.value.rule.protocol != "Udp" ? try(each.value.rule.enable_tcp_reset, null) : null
+  tcp_reset_enabled        = each.value.rule.protocol != "Udp" ? try(each.value.rule.tcp_reset_enabled, null) : null
   allocated_outbound_ports = try(each.value.rule.allocated_outbound_ports, null)
   idle_timeout_in_minutes  = each.value.rule.protocol != "Udp" ? try(each.value.rule.idle_timeout_in_minutes, null) : null
 
