@@ -76,17 +76,25 @@ module "fortigate_scaleset" {
   storage_account_name          = try(each.value.storage_account_name, null)
   storage_account_creation_flag = try(each.value.storage_account_creation_flag, true)
   vmss_name                     = try(each.value.vmss_name, "fortigate-scaleset")
-  image_version                 = try(each.value.image_version, "7.2.8")
-  # image_sku                     = format("fortinet_fg-vm%s%s", each.value.license_type == "payg" ? "_payg_2023" : "", try(each.value.architecture, "") == "Arm64" ? "_arm64" : "")
 
-  image_sku = format(
-    "fortinet_fg-vm%s%s%s",
-    each.value.license_type == "payg" ? "_payg_2023" : "",
-    try(each.value.architecture, "") == "Arm64" ? "_arm64" : "",
-    contains(["7.6.1", "7.6.2", "7.6.3", "7.6.4"], each.value.image_version) ? "_g2" : ""
-  )
+  image_version = can(regex("^\\d+\\.\\d+$", each.value.image_version)) ? "latest" : each.value.image_version
 
   license_type = try(each.value.license_type, "byol")
+
+  image_sku = format(
+    "fortinet_fg-vm_%s_%s%s%s",
+    try(each.value.license_type, "byol"),
+    replace(
+      regex(
+        "^\\d+\\.\\d+",
+        each.value.image_version
+      ),
+      ".",
+      ""
+    ),
+    lower(try(each.value.gen_type, "standard")) == "g2" ? "_g2" : "",
+    lower(try(each.value.architecture, "")) == "arm64" ? "_arm64" : ""
+  )
 
   application_insights_id = try(each.value.application_insights_id, null)
   network_interfaces = [for interface in each.value.network_interfaces :
@@ -101,10 +109,10 @@ module "fortigate_scaleset" {
   ]
 
   fortigate_username            = try(each.value.fortigate_username, "fgtadmin")
-  fortigate_password            = try(each.value.fortigate_password, random_password.random_fgt_password)
+  fortigate_password            = try(each.value.fortigate_password, random_password.random_fgt_password.result)
   fortigate_license_folder_path = try("${path.cwd}/${each.value.fortigate_license_folder_path}", "./licenses")
   fortigate_autoscale_psksecret = random_password.psksecret.result
-  fortigate_custom_config       = file(try(each.value.fortigate_custom_config_file_path, "fortigate_custom_config.conf"))
+  fortigate_custom_config       = file(try(each.value.fortigate_custom_config_file_path, "${path.module}/fortigate_custom_config.conf"))
   fortiflex_api_username        = try(each.value.fortiflex_api_username, null)
   fortiflex_api_password        = try(each.value.fortiflex_api_password, null)
   fortiflex_config_id           = try(each.value.fortiflex_config_id, null)

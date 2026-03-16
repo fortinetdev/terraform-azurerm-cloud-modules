@@ -2,8 +2,7 @@ Terraform Modules for Deploying FortiGate VMs on Azure
 
 ## Supported Examples ##
 1. applb_gwlb_fgtasg
-2. single_fgt
-3. extlb_fgtasg_intlb
+2. extlb_fgtasg_intlb
 
 ## Design ##
 

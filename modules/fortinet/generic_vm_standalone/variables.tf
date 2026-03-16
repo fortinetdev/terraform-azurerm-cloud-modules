@@ -120,6 +120,36 @@ variable "image_version" {
   type        = string
 }
 
+variable "license_type" {
+  description = "FortiGate license type used to format image SKU. Allowed values: byol, payg."
+  type        = string
+  default     = "byol"
+  validation {
+    condition     = contains(["byol", "payg"], var.license_type)
+    error_message = "The license_type must be either byol or payg."
+  }
+}
+
+variable "gen_type" {
+  description = "FortiGate generation type used to format image SKU. Allowed values: standard, g2."
+  type        = string
+  default     = "standard"
+  validation {
+    condition     = contains(["standard", "g2"], var.gen_type)
+    error_message = "The gen_type must be either standard or g2."
+  }
+}
+
+variable "architecture" {
+  description = "FortiGate CPU architecture used to format image SKU. Allowed values: x64, arm64."
+  type        = string
+  default     = "x64"
+  validation {
+    condition     = contains(["x64", "arm64"], var.architecture)
+    error_message = "The architecture must be either x64 or arm64."
+  }
+}
+
 variable "product_name" {
   description = "The short name for a Fortinet product. Allowed values: fortigate, fortimanager, fortianalyzer, fortiguest, fortiaiops, fortigate-arm64, fortigate-g2, fortigate-payg, fortigate-payg-g2, fortigate-payg-arm64."
   type        = string

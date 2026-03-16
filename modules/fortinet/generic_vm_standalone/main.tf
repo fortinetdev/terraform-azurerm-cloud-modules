@@ -1,32 +1,31 @@
 locals {
-  resource_group_name  = var.resource_group_creation_flag ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.existing_group[0].name
-  virtual_network_name = var.virtual_network_creation_flag ? azurerm_virtual_network.vnet[0].name : data.azurerm_virtual_network.existing_vnet[0].name
-  subnet               = var.subnet_creation_flag ? azurerm_subnet.subnet[0] : data.azurerm_subnet.existing_subnet[0]
+  resource_group_name    = var.resource_group_creation_flag ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.existing_group[0].name
+  virtual_network_name   = var.virtual_network_creation_flag ? azurerm_virtual_network.vnet[0].name : data.azurerm_virtual_network.existing_vnet[0].name
+  subnet                 = var.subnet_creation_flag ? azurerm_subnet.subnet[0] : data.azurerm_subnet.existing_subnet[0]
+  image_version_is_train = can(regex("^\\d+\\.\\d+$", var.image_version))
+  image_version_train    = can(regex("^\\d+\\.\\d+", var.image_version)) ? replace(regex("^\\d+\\.\\d+", var.image_version), ".", "") : var.image_version
+  fortigate_gen_suffix   = var.gen_type == "g2" ? "_g2" : ""
+  fortigate_arch_suffix  = var.architecture == "arm64" ? "_arm64" : ""
+  fortigate_dynamic_sku  = "fortinet_fg-vm_${var.license_type}_${local.image_version_train}${local.fortigate_gen_suffix}${local.fortigate_arch_suffix}"
+
+  effective_image_offer   = var.image_offer != "" ? var.image_offer : (startswith(var.product_name, "fortigate") ? local.image_offer_tempate["fortigate"] : local.image_offer_tempate[var.product_name])
+  effective_image_sku     = var.image_sku != "" ? var.image_sku : (startswith(var.product_name, "fortigate") ? local.fortigate_dynamic_sku : local.image_sku_template[var.product_name])
+  effective_image_version = (startswith(var.product_name, "fortigate") && local.image_version_is_train) ? "latest" : var.image_version
 
   image_sku_template = {
-    "fortiaiops"           = "fortinet_fortiaiops-vm"
-    "fortianalyzer"        = "fortinet-fortianalyzer"
-    "fortiguest"           = "fortinet_fortiguest-vm"
-    "fortimanager"         = "fortinet-fortimanager"
-    "fortigate"            = "fortinet_fg-vm"
-    "fortigate-arm64"      = "fortinet_fg-vm_arm64"
-    "fortigate-g2"         = "fortinet_fg-vm_g2"
-    "fortigate-payg"       = "fortinet_fg-vm_payg_2023"
-    "fortigate-payg-g2"    = "fortinet_fg-vm_payg_2023_g2"
-    "fortigate-payg-arm64" = "fortinet_fg-vm_payg_2023_arm64"
+    "fortiaiops"    = "fortinet_fortiaiops-vm"
+    "fortianalyzer" = "fortinet-fortianalyzer"
+    "fortiguest"    = "fortinet_fortiguest-vm"
+    "fortimanager"  = "fortinet-fortimanager"
+    "fortigate"     = local.fortigate_dynamic_sku
   }
 
   image_offer_tempate = {
-    "fortiaiops"           = "fortinet-fortiaiops"
-    "fortianalyzer"        = "fortinet-fortianalyzer"
-    "fortiguest"           = "fortinet-fortiguest"
-    "fortimanager"         = "fortinet-fortimanager"
-    "fortigate"            = "fortinet_fortigate-vm_v5"
-    "fortigate-arm64"      = "fortinet_fortigate-vm_v5"
-    "fortigate-g2"         = "fortinet_fortigate-vm_v5"
-    "fortigate-payg"       = "fortinet_fortigate-vm_v5"
-    "fortigate-payg-g2"    = "fortinet_fortigate-vm_v5"
-    "fortigate-payg-arm64" = "fortinet_fortigate-vm_v5"
+    "fortiaiops"    = "fortinet-fortiaiops"
+    "fortianalyzer" = "fortinet-fortianalyzer"
+    "fortiguest"    = "fortinet-fortiguest"
+    "fortimanager"  = "fortinet-fortimanager"
+    "fortigate"     = "fortinet_fortigate-vm"
   }
 }
 
@@ -162,15 +161,15 @@ resource "azurerm_linux_virtual_machine" "instance_vm" {
 
   source_image_reference {
     publisher = var.image_publisher
-    offer     = var.image_offer != "" ? var.image_offer : local.image_offer_tempate[var.product_name]
-    sku       = var.image_sku != "" ? var.image_sku : local.image_sku_template[var.product_name]
-    version   = var.image_version
+    offer     = local.effective_image_offer
+    sku       = local.effective_image_sku
+    version   = local.effective_image_version
   }
 
   plan {
-    name      = var.image_sku != "" ? var.image_sku : local.image_sku_template[var.product_name]
+    name      = local.effective_image_sku
     publisher = var.image_publisher
-    product   = var.image_offer != "" ? var.image_offer : local.image_offer_tempate[var.product_name]
+    product   = local.effective_image_offer
   }
 
   custom_data = base64encode(templatefile("${path.module}/${var.bootstrap_template}", {

@@ -11,8 +11,9 @@ fortigate_scaleset = {
     # Information used for creating FortiGate VMSS instances, modify as needed
     vmss_name                     = "fortigate-scaleset-byol"
     vm_size                       = "Standard_D2s_v3"
-    image_version                 = "7.2.10"
+    image_version                 = "7.6"
     license_type                  = "byol"
+    gen_type                      = "standard"      # or g2
     architecture                  = "x64"           # or Arm64
     vnet_key                      = "providerVnet"  # This value should match the corresponding value in the Gateway Load Balancer (GWLB)
     zones                         = ["1", "2", "3"] # Availability zones used for the instances.
@@ -45,7 +46,18 @@ fortigate_scaleset = {
     # fortiflex_api_username  = "<YOUR-OWN-VALUE>"
     # fortiflex_api_password  = "<YOUR-OWN-VALUE>"
     # fortiflex_config_id     = "<YOUR-OWN-VALUE>"
-    fortiflex_retrieve_mode = "use_active" # or use_stopped
+    # fortiflex_retrieve_mode = "use_active" # or use_stopped
+
+    # Using FortiManager(FMG) for FortiGate instances on Azure.
+    # fmg_integration = {
+      # ip = "<FMG Public IP>"
+      # sn = "<FMG Serial Number>"
+      # ums = {
+        # fmg_register_password = "<Password_for_FGT_register>"
+        # hb_interval           = 30
+        # api_key               = "<FMG_API_User_Key>"
+      # }
+    # }
 
     # fortigate vmss auto scale info, modify the values as needed
     autoscale_metrics = {
@@ -216,12 +228,12 @@ standard_load_balancers = {
         gwlb_key         = "gwlb"
         inbound_rules = {
           http = {
-            floating_ip = false
+            floating_ip_enabled = false
             port        = 80
             protocol    = "Tcp"
           }
           https = {
-            floating_ip = false
+            floating_ip_enabled = false
             port        = 443
             protocol    = "Tcp"
           }

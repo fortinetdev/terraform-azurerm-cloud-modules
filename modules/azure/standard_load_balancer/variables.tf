@@ -96,7 +96,8 @@ variable "probe_name" {
 variable "probe_port" {
   description = "Health check port number of the load balancer probe."
   type        = string
-  default     = "80"
+  # default   = "443"
+  default = "80"
 }
 
 variable "network_security_group_name" {

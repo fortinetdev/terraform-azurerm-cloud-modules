@@ -55,27 +55,82 @@ config router static
     next
 end
 
+config system probe-response
+    set port 8008
+    set http-probe-value "OK"
+    set mode http-probe
+end
+
 %{ if fmg_integration != null ~}
 config system central-management
     set type fortimanager
     set fmg ${fmg_integration.ip}
     set serial-number ${fmg_integration.sn}
 end
-%{ if fmg_integration.mode == "ums" ~}
+%{ if fmg_integration.ums != null ~}
 config system auto-scale
     set status enable
-    set sync-interface ${coalesce(private_interface_name, "port2")}
-    set hb-interval ${fmg_integration.hb_interval}
+    set sync-interface port1
+    set hb-interval ${fmg_integration.ums.hb_interval}
+    set role primary
     set callback-url ${fmg_integration.ip}
     set cloud-mode ums
-    set psksecret ${fmg_integration.autoscale_psksecret}
+    set psksecret ${fortigate_autoscale_psksecret}
 end
 %{ if license_type == "payg" ~}
-exec central-mgmt register-device ${fmg_integration.sn} ${fmg_integration.fmg_password}
+exec central-mgmt register-device ${fmg_integration.sn} ${fmg_integration.ums.fmg_register_password}
 %{ else ~}
-exec central-mgmt register-device-by-ip ${fmg_integration.ip} ${fmg_integration.api_key}
+exec central-mgmt register-device-by-ip ${fmg_integration.ip} ${fmg_integration.ums.api_key}
+exec update-now
 %{ endif ~}
 %{ endif ~}
 %{ endif ~}
 
+%{ if gwlb_frontend_ip_address != "" ~}
+config system vxlan
+    edit "extvxlan"
+        set interface ${coalesce(private_interface_name, "port2")}
+        set vni 801
+        set dstport 2001
+        set remote-ip ${gwlb_frontend_ip_address}
+    next
+    edit "intvxlan"
+        set interface ${coalesce(private_interface_name, "port2")}
+        set vni 800
+        set dstport 2000
+        set remote-ip ${gwlb_frontend_ip_address}
+    next
+end
+
+config system switch-interface
+    edit int-ext-vxlan
+        set vdom root
+        set member intvxlan extvxlan
+        set intra-switch-policy explicit
+    next
+end
+
+config firewall policy
+    edit 0
+        set name "int-ext_vxlan"
+        set srcintf "intvxlan" "extvxlan"
+        set dstintf "intvxlan" "extvxlan"
+        set action accept
+        set srcaddr "all"
+        set dstaddr "all"
+        set schedule "always"
+        set service "ALL"
+        set utm-status enable
+        set ssl-ssh-profile "certificate-inspection"
+        set ips-sensor "default"
+        set logtraffic all
+    next
+end
+
+config system settings
+    set asymroute enable
+end
+%{ endif ~}
+
+## start custom config
 ${custom_config}

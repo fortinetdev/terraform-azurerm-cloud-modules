@@ -122,6 +122,9 @@ variable "fortigate_scaleset" {
   - vmss_name                                 (Required|string) The name of the FortiGate Scale Set.
   - image_version                        (Optional|string) Fortigate version.  The default value is `7.2.8`.
   - license_type                         (Optional|string) The options are `byol` and `payg`.
+  - gen_type                             (Optional|string) The generation type for the FortiGate image. Possible values are `standard` and `g2`.
+  - architecture                         (Optional|string) The architecture of the FortiGate image. Possible values are `x64` and `Arm64`.
+  - vm_size                                (Required|string) The size of the Virtual Machine Scale Set instances.
   - zones                                (Optional|list(string)) Specifies a list of Availability Zones in which this Linux Virtual Machine Scale Set should be located.
   - vnet_key                             (Required|string) The VNET hosting the fortigate instances.
   - storage_account_name                 (Optional|string) The storage account that is used for the FortiGate Auto Scale set.
@@ -148,9 +151,11 @@ variable "fortigate_scaleset" {
   Options for fmg_integration:
     - ip                  (Required|string) The public IP address of the FortiManager.
     - sn                  (Required|string) The serial number of the FortiManager.
-    - autoscale_psksecret (Optional|string) The PSK secret used for the FortiGate Auto Scale set. If not provided, a generated string will be used.
-    - fmg_password        (Required|string) The password used to access to your FortiManager.
-    - hb_interval         (Optional|number) The interval in seconds between heartbeats sent from the FortiGate instances to the FortiManager. Default value is `30`.
+    - ums                 (Optional|object) The UMS (User Managed Scaling) configuration for FortiManager.
+      Options for ums:
+        - fmg_register_password        (Required|string) The password used to access to your FortiManager.
+        - hb_interval                  (Optional|number) The interval in seconds between heartbeats sent from the FortiGate instances to the FortiManager. Default value is `30`.
+        - api_key                      (Optional|string) The API key for the FortiManager. This is required if you are using the FortiManager API to manage the FortiGate.
 
   Options for autoscale_metrics:
     metric_name                   (Required|string) The autoscale metric name.
@@ -178,6 +183,7 @@ EOF
     image_version                 = optional(string, "7.2.8")
     architecture                  = optional(string)
     license_type                  = optional(string)
+    gen_type                      = optional(string)
     application_insights_id       = optional(string)
     network_interfaces = list(object({
       name                = string
@@ -214,11 +220,13 @@ EOF
     default_count                 = optional(number, 1)
     max_count                     = optional(number, 1)
     fmg_integration = optional(object({
-      ip                  = string
-      sn                  = string
-      autoscale_psksecret = optional(string)
-      fmg_password        = string
-      hb_interval         = optional(number, 30)
+      ip = string
+      sn = string
+      ums = optional(object({
+        fmg_register_password = string
+        hb_interval           = optional(number, 30)
+        api_key               = optional(string)
+      }))
     }))
   }))
 }

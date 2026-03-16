@@ -25,6 +25,7 @@ No modules.
 | [azurerm_application_insights.app_insights](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_insights) | resource |
 | [azurerm_linux_function_app.function_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_function_app) | resource |
 | [azurerm_linux_virtual_machine_scale_set.vmss](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) | resource |
+| [azurerm_log_analytics_workspace.log_analytics_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) | resource |
 | [azurerm_monitor_autoscale_setting.autoscale_setting](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_autoscale_setting) | resource |
 | [azurerm_role_assignment.role_assignment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_service_plan.plan](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/service_plan) | resource |
@@ -54,6 +55,7 @@ No modules.
 | <a name="input_default_count"></a> [default\_count](#input\_default\_count) | The minimum number of instances to keep in the scale set if the autoscaling engine cannot read the metrics or is unable to compare them to the thresholds. | `number` | n/a | yes |
 | <a name="input_disk_encryption_set_id"></a> [disk\_encryption\_set\_id](#input\_disk\_encryption\_set\_id) | The ID of the Disk Encryption Set which should be used to encrypt this Data Disk. | `string` | `null` | no |
 | <a name="input_enable_accelerated_networking"></a> [enable\_accelerated\_networking](#input\_enable\_accelerated\_networking) | If true, enable Azure accelerated networking (SR-IOV) for all dataplane network interfaces. | `bool` | n/a | yes |
+| <a name="input_fmg_integration"></a> [fmg\_integration](#input\_fmg\_integration) | Using the User Managed Scaling feature in FortiManager to handle license management for FortiGate.<br/>Options for fmg\_integration:<br/>  - ip                  (Required\|string) The public IP address of the FortiManager.<br/>  - sn                  (Required\|string) The serial number of the FortiManager.<br/>  - ums                 (Optional\|object) The UMS (User Managed Scaling) configuration for FortiManager.<br/>    Options for ums:<br/>      - fmg\_register\_password        (Required\|string) The password used to access to your FortiManager.<br/>      - hb\_interval                  (Optional\|number) The interval in seconds between heartbeats sent from the FortiGate instances to the FortiManager. Default value is `30`.<br/>      - api\_key                      (Optional\|string) The API key for the FortiManager. This is required if you are using the FortiManager API to manage the FortiGate.<br/>Example:<pre>fmg_integration = {<br/>  ip                            = "13.82.216.180"<br/>  sn                            = "FGT123456789012345"<br/>  ums = {<br/>    fmg_register_password       = "fortinet"<br/>    hb_interval                 = 30<br/>    api_key                     = "example_api_user_key"<br/>  }<br/>}</pre> | <pre>object({<br/>    ip = string<br/>    sn = string<br/>    ums = optional(object({<br/>      fmg_register_password = string<br/>      hb_interval           = optional(number, 10)<br/>      api_key               = optional(string)<br/>    }))<br/>  })</pre> | `null` | no |
 | <a name="input_fortiflex_api_password"></a> [fortiflex\_api\_password](#input\_fortiflex\_api\_password) | api password used for communicating with fortiflex for tokens | `string` | n/a | yes |
 | <a name="input_fortiflex_api_username"></a> [fortiflex\_api\_username](#input\_fortiflex\_api\_username) | api user name used for communicating with fortiflex for tokens | `string` | n/a | yes |
 | <a name="input_fortiflex_config_id"></a> [fortiflex\_config\_id](#input\_fortiflex\_config\_id) | IDs for the token pool derived from the configuration | `string` | n/a | yes |
@@ -61,10 +63,10 @@ No modules.
 | <a name="input_fortigate_autoscale_psksecret"></a> [fortigate\_autoscale\_psksecret](#input\_fortigate\_autoscale\_psksecret) | secret used for configure fortigate auto-scale feature | `string` | n/a | yes |
 | <a name="input_fortigate_custom_config"></a> [fortigate\_custom\_config](#input\_fortigate\_custom\_config) | the custom fortios configrations | `string` | `""` | no |
 | <a name="input_fortigate_license_folder_path"></a> [fortigate\_license\_folder\_path](#input\_fortigate\_license\_folder\_path) | local path points to the folder of existing licenses. The licenses will be upload to the shared storage bucket. | `string` | n/a | yes |
-| <a name="input_fortigate_license_source"></a> [fortigate\_license\_source](#input\_fortigate\_license\_source) | Either file or file\_fortiflex | `string` | `"file_fortiflex"` | no |
+| <a name="input_fortigate_license_source"></a> [fortigate\_license\_source](#input\_fortigate\_license\_source) | Either file, fortiflex or file\_fortiflex | `string` | `"file_fortiflex"` | no |
 | <a name="input_fortigate_password"></a> [fortigate\_password](#input\_fortigate\_password) | Initial administrative password to use for Fortigate. | `string` | n/a | yes |
 | <a name="input_fortigate_username"></a> [fortigate\_username](#input\_fortigate\_username) | Initial administrative username to use for Fortigate. | `string` | n/a | yes |
-| <a name="input_image_sku"></a> [image\_sku](#input\_image\_sku) | FortiGate SKU – use the command `az vm image list -o table --all --publisher fortinet --offer fortinet_fortigate-vm_v5` to see all the SKUs. | `string` | n/a | yes |
+| <a name="input_image_sku"></a> [image\_sku](#input\_image\_sku) | FortiGate SKU – use the command `az vm image list -o table --all --publisher fortinet --offer fortinet_fortigate-vm` to see all the SKUs. | `string` | n/a | yes |
 | <a name="input_image_version"></a> [image\_version](#input\_image\_version) | Fortigate version. | `string` | n/a | yes |
 | <a name="input_license_type"></a> [license\_type](#input\_license\_type) | Either `byol` or `payg`. | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Region for installing FortiGate and its dependencies. | `string` | n/a | yes |
@@ -79,7 +81,7 @@ No modules.
 | <a name="input_storage_account_name"></a> [storage\_account\_name](#input\_storage\_account\_name) | Name of the existing storage account where the function app artifacts will be stored. This is required if storage\_account\_creation\_flag is set false. | `string` | n/a | yes |
 | <a name="input_storage_account_type"></a> [storage\_account\_type](#input\_storage\_account\_type) | The Type of Storage Account which should back this Data Disk. Possible values include Standard\_LRS, StandardSSD\_LRS, StandardSSD\_ZRS, Premium\_LRS, PremiumV2\_LRS, Premium\_ZRS and UltraSSD\_LRS. | `string` | `"StandardSSD_LRS"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags for the created resources. | `map(string)` | `{}` | no |
-| <a name="input_vm_size"></a> [vm\_size](#input\_vm\_size) | Azure VM type to be created. | `string` | `"Standard_D2s_v3"` | no |
+| <a name="input_vm_size"></a> [vm\_size](#input\_vm\_size) | Azure VM type to be created. | `string` | n/a | yes |
 | <a name="input_vmss_name"></a> [vmss\_name](#input\_vmss\_name) | The name of the created scale set. | `string` | n/a | yes |
 | <a name="input_zone_balance"></a> [zone\_balance](#input\_zone\_balance) | A flag for the Virtual Machines in this Scale Set be strictly evenly distributed across Availability Zones. | `bool` | `false` | no |
 | <a name="input_zones"></a> [zones](#input\_zones) | Specifies a list of Availability Zones in which this Linux Virtual Machine Scale Set should be located. | `list(string)` | n/a | yes |
@@ -88,4 +90,6 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_image_sku"></a> [image\_sku](#output\_image\_sku) | Fortinet image SKU used by the VMSS |
+| <a name="output_image_version"></a> [image\_version](#output\_image\_version) | Resolved Fortinet image version (mapped\_image\_version or image\_version) |
 | <a name="output_scale_set_name"></a> [scale\_set\_name](#output\_scale\_set\_name) | The name of the created virtual machine scale set. |

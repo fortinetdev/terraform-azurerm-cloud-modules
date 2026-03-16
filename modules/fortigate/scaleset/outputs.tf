@@ -1,5 +1,6 @@
 output "scale_set_name" {
   description = "The name of the created virtual machine scale set."
+  sensitive   = true
   value = {
     name               = azurerm_linux_virtual_machine_scale_set.vmss.name
     type               = var.license_type

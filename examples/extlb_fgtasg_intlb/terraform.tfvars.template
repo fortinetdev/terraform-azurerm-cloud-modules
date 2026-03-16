@@ -12,6 +12,104 @@ tags = {
 # it's up to you to enable east-west traffic or not, default is false.
 enable_east_west_traffic = true
 
+fortigate_scaleset = {
+  byol = {
+    # Information used for creating FortiGate VMSS instances
+    vmss_name                     = "vmss-byol"
+    image_version                 = "7.6"
+    vm_size                       = "Standard_D2s_v3"
+    license_type                  = "byol"
+    gen_type                      = "standard"     # or g2
+    architecture                  = "x64"          # Arm64
+    vnet_key                      = "providerVnet" # This value should match the corresponding value in the Load Balancer.
+    zones                         = ["1"]
+
+    storage_account_creation_flag = true
+
+    network_interfaces = [
+      {
+        name       = "port1"
+        subnet_key = "public"
+        # pick the first ip from the subnet's address_prefixes by default
+        gateway_ip_address  = "10.20.0.1"
+        create_public_ip    = "true"
+        enable_backend_pool = "true"
+        gwlb_key            = "extlb"
+      },
+      {
+        name       = "port2"
+        subnet_key = "private"
+        # pick the first ip from the subnet's address_prefixes by default
+        gateway_ip_address  = "10.20.0.65"
+        enable_backend_pool = "true"
+        gwlb_key            = "intlb"
+      }
+    ]
+
+    fortigate_username            = "<YOUR-OWN-VALUE>"
+    fortigate_password            = "<YOUR-OWN-VALUE>"
+
+    # Optional, it's used for additional fortigate configurations
+    # fortigate_custom_config_file_path = "fortigate_custom_config.conf"
+
+    # Licenses used for BYOL with Azure function
+    fortigate_license_folder_path = "./licenses"
+
+    # fortiflex_api_username  = "<YOUR-OWN-VALUE>"
+    # fortiflex_api_password  = "<YOUR-OWN-VALUE>"
+    # fortiflex_config_id     = "<YOUR-OWN-VALUE>"
+    # fortiflex_retrieve_mode = "use_active"
+
+    # Using FortiManager(FMG) for FortiGate instances on Azure.
+    # fmg_integration = {
+      # ip = "<FMG Public IP>"
+      # sn = "<FMG Serial Number>"
+      # ums = {
+        # fmg_register_password = "<Password_for_FGT_register>"
+        # hb_interval           = 30
+        # api_key               = "<FMG_API_User_Key>"
+      # }
+    # }
+
+    # fortigate vmss auto scale info, change the values if needed. Scale-in and scale-out metrics are required.
+    autoscale_metrics = {
+      "Percentage CPU Scale Out" = {
+        metric_name                   = "Percentage CPU"
+        operator                      = "GreaterThanOrEqual"
+        statistic                     = "Average"
+        threshold                     = 80
+        time_aggregation              = "Last"
+        time_grain_minutes            = 1
+        time_window_minutes           = 5
+        scale_action_direction        = "Increase",
+        scale_action_type             = "ChangeCount",
+        scale_action_value            = 1
+        scale_action_cooldown_minutes = 50
+      }
+      "Percentage CPU Scale In" = {
+        metric_name                   = "Percentage CPU"
+        operator                      = "LessThanOrEqual"
+        statistic                     = "Average"
+        threshold                     = 80
+        time_aggregation              = "Last"
+        time_grain_minutes            = 1
+        time_window_minutes           = 5
+        scale_action_direction        = "Decrease",
+        scale_action_type             = "ChangeCount",
+        scale_action_value            = 1
+        scale_action_cooldown_minutes = 50
+      }
+    }
+
+    data_type                     = "custom_data" # Default to custom_data for enhanced security. Change it to user_data if you'd like to use user_data in vmss
+
+    autoscale_notification_emails = []
+    min_count                     = 1
+    default_count                 = 1
+    max_count                     = 2
+  }
+}
+
 # VNets
 vnets = {
   providerVnet = {
@@ -185,85 +283,6 @@ vnet_peering = {
   }
 }
 
-fortigate_scaleset = {
-  byol = {
-    # Information used for creating FortiGate VMSS instances
-    vmss_name                     = "vmss-byol"
-    image_version                 = "7.2.8"
-    vm_size                       = "Standard_D2s_v3"
-    license_type                  = "byol"
-    architecture                  = "x64"          # Arm64
-    vnet_key                      = "providerVnet" # This value should match the corresponding value in the Load Balancer.
-    zones                         = ["1", "2", "3"]
-    storage_account_creation_flag = true
-    network_interfaces = [
-      {
-        name       = "port1"
-        subnet_key = "public"
-        # pick the first ip from the subnet's address_prefixes by default
-        gateway_ip_address  = "10.20.0.1"
-        create_public_ip    = "true"
-        enable_backend_pool = "true"
-        gwlb_key            = "extlb"
-      },
-      {
-        name       = "port2"
-        subnet_key = "private"
-        # pick the first ip from the subnet's address_prefixes by default
-        gateway_ip_address  = "10.20.0.65"
-        enable_backend_pool = "true"
-        gwlb_key            = "intlb"
-      }
-    ]
-
-    fortigate_username            = "fgtadmin"
-    fortigate_password            = "VM12345678!"
-    fortigate_license_folder_path = "./licenses"
-    # You can add additional fortigate configurations here, which already include some necessary configurations.
-    fortigate_custom_config_file_path = "fortigate_custom_config.conf"
-
-    fortiflex_api_username  = "<YOUR-OWN-VALUE>"
-    fortiflex_api_password  = "<YOUR-OWN-VALUE>"
-    fortiflex_config_id     = "<YOUR-OWN-VALUE>"
-    fortiflex_retrieve_mode = "use_active"
-
-    # fortigate vmss auto scale info, change the values if needed. Scale-in and scale-out metrics are required.
-    autoscale_metrics = {
-      "Percentage CPU Scale Out" = {
-        metric_name                   = "Percentage CPU"
-        operator                      = "GreaterThanOrEqual"
-        statistic                     = "Average"
-        threshold                     = 80
-        time_aggregation              = "Last"
-        time_grain_minutes            = 1
-        time_window_minutes           = 5
-        scale_action_direction        = "Increase",
-        scale_action_type             = "ChangeCount",
-        scale_action_value            = 1
-        scale_action_cooldown_minutes = 50
-      }
-      "Percentage CPU Scale In" = {
-        metric_name                   = "Percentage CPU"
-        operator                      = "LessThanOrEqual"
-        statistic                     = "Average"
-        threshold                     = 80
-        time_aggregation              = "Last"
-        time_grain_minutes            = 1
-        time_window_minutes           = 5
-        scale_action_direction        = "Decrease",
-        scale_action_type             = "ChangeCount",
-        scale_action_value            = 1
-        scale_action_cooldown_minutes = 50
-      }
-    }
-    data_type                     = "custom_data" # Default to custom_data for enhanced security. Change it to user_data if you'd like to use user_data in vmss
-    autoscale_notification_emails = []
-    min_count                     = 1
-    default_count                 = 1
-    max_count                     = 2
-  }
-}
-
 standard_load_balancers = {
   extlb = {
     lb_name    = "extlb"
@@ -272,7 +291,7 @@ standard_load_balancers = {
       extlb = {
         create_public_ip = true
         inbound_rules = {
-          ## because fortigate also use port 80 for access, use different mapping port number for the backend_port.
+          # because fortigate also use port 80 for access, use different mapping port number for the backend_port.
           http = {
             enable_floating_ip = true
             port               = 80

@@ -1,11 +1,21 @@
 ### Upgrading FortiGate AutoScale Group
 Upgrading the FortiGate image version in an Azure Virtual Machine Scale Set (VMSS) is supported. Please review the following considerations and steps to ensure a smooth upgrade process:
 
-1. **Update the Image Version**
-  Modify the `image_version` parameter in the `fortigate_scaleset` section of your `terraform.tfvars` file. This change ensures that all newly launched VM instances will use the updated image version. Existing VM instances will continue to run the previous image version.
+1. **Update the image version**
+  Change the `image_version` value in the `fortigate_scaleset` section of your `terraform.tfvars` file. By default this will replace existing VMs: the old instances are deleted and new instances are created with the updated image.
 
-2. **Apply the Changes**
-  After updating the `terraform.tfvars` file, run `terraform apply` to deploy the changes. Only new VM instances created after this update will use the new image version.
+  If you prefer to preserve the current instances and create a small number of new instances running the updated image (to validate configuration sync), follow these steps:
+
+  1) Update the VMSS image reference remotely (optional). For example, with Azure PowerShell:
+
+     Update-AzVmss -ResourceGroupName "autoscale-upgrade-test" -VMScaleSetName "vmss-byol" -ImageReferenceVersion 7.6.1
+
+  2) Temporarily increase `min_count` and `default_count` in `terraform.tfvars` to create the additional test instances. For example, change `2, 2, 6` to `4, 4, 6` to add two instances.
+
+2. **Apply the changes**
+  1) Run `terraform apply` after updating `terraform.tfvars`. Terraform will create the additional instances with the new image while keeping the existing instances unchanged. Allow several minutes for the new instances to boot and synchronize configuration from the primary instance.
+
+  2) To make the new instances the default members of the VMSS, scale in by lowering `min_count` and `default_count`. The VMSS scale-in policy is set to `OldestVM` by default, so the oldest instances will be removed and the newer instances (with the updated image) will remain. Change the scale-in policy if you need a different behavior.
 
 4. **Review and Test**
   Before applying changes in a production environment, test the upgrade process in a staging environment to validate compatibility and minimize potential disruptions.

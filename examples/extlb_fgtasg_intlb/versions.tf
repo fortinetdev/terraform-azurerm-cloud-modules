@@ -19,6 +19,10 @@ provider "azurerm" {
     resource_group {
       prevent_deletion_if_contains_resources = false
     }
+    # Used for VMSS rolling upgrade, default is true
+    # virtual_machine_scale_set {
+    #   roll_instances_when_required = false
+    # }
   }
 
   subscription_id = var.azure_subscription_id

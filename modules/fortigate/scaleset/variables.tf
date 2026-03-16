@@ -113,7 +113,7 @@ variable "fortigate_license_folder_path" {
 }
 
 variable "fortigate_license_source" {
-  description = "Either file or file_fortiflex"
+  description = "Either file, fortiflex or file_fortiflex"
   type        = string
   default     = "file_fortiflex"
 }
@@ -182,7 +182,7 @@ variable "disk_encryption_set_id" {
 }
 
 variable "image_sku" {
-  description = "FortiGate SKU – use the command `az vm image list -o table --all --publisher fortinet --offer fortinet_fortigate-vm_v5` to see all the SKUs."
+  description = "FortiGate SKU – use the command `az vm image list -o table --all --publisher fortinet --offer fortinet_fortigate-vm` to see all the SKUs. Avoid deploying 7.6.5, 7.4.10, 7.2.12, 7.0.18, and earlier versions due to known vulnerabilities."
   type        = string
 }
 
@@ -275,36 +275,36 @@ variable "autoscale_notification_emails" {
 variable "fmg_integration" {
   description = <<-EOF
   Using the User Managed Scaling feature in FortiManager to handle license management for FortiGate.
-  Options:
-  - ip                  - (Required|string) The IP address of the FortiManager.
-  - sn                  - (Required|string) The serial number of the FortiGate.
-  - autoscale_psksecret - (Required|string) The pre-shared key used for the FortiGate and FortiManager to communicate.
-  - fmg_password        - (Required|string) The password for the FortiManager.
-  - hb_interval         - (Optional|number) The heartbeat interval in seconds. Default is 10 seconds.
-  - api_key            - (Optional|string) The API key for the FortiManager. This is required if you are using the FortiManager API to manage the FortiGate.
-  - mode              - (Optional|string) Auto-scaling cloud mode.
+  Options for fmg_integration:
+    - ip                  (Required|string) The public IP address of the FortiManager.
+    - sn                  (Required|string) The serial number of the FortiManager.
+    - ums                 (Optional|object) The UMS (User Managed Scaling) configuration for FortiManager.
+      Options for ums:
+        - fmg_register_password        (Required|string) The password used to access to your FortiManager.
+        - hb_interval                  (Optional|number) The interval in seconds between heartbeats sent from the FortiGate instances to the FortiManager. Default value is `30`.
+        - api_key                      (Optional|string) The API key for the FortiManager. This is required if you are using the FortiManager API to manage the FortiGate.
   Example:
   ```
   fmg_integration = {
-    ip                  = "13.82.216.180"
-    sn                  = "FGT123456789012345"
-    autoscale_psksecret = "fortinet"
-    fmg_password        = "fortinet"
-    hb_interval         = 30
-    mode                = "ums"
-    api_key             = "example_api_key"
+    ip                            = "13.82.216.180"
+    sn                            = "FGT123456789012345"
+    ums = {
+      fmg_register_password       = "fortinet"
+      hb_interval                 = 30
+      api_key                     = "example_api_user_key"
+    }
   }
   ```
   EOF
 
   type = object({
-    ip                  = string
-    sn                  = string
-    autoscale_psksecret = string
-    fmg_password        = string
-    hb_interval         = optional(number, 10)
-    mode                = optional(string, "ums")
-    api_key             = optional(string)
+    ip = string
+    sn = string
+    ums = optional(object({
+      fmg_register_password = string
+      hb_interval           = optional(number, 10)
+      api_key               = optional(string)
+    }))
   })
   default = null
 }

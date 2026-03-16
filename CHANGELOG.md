@@ -1,4 +1,14 @@
-## 1.0.5 (Unreleased)
+## 1.0.6 (Unreleased)
+
+## 1.0.5 (March. 13, 2026)
+IMPROVEMENTS:
+
+* Updated the documentation in fgtasg_version_upgrade_guidance.md;
+* Updated the image SKU format logic to support the new SKUs and Offer;
+* Updated main.tf under /modules/fortigate/scaleset/ to support the UMS feature;
+* Updated the Azure Function;
+* Added support for the UMS feature.
+* Enabled Azure VM Serial Console in the Azure scaleset module.
 
 ## 1.0.4(Nov. 7, 2025)
 IMPROVEMENTS:
