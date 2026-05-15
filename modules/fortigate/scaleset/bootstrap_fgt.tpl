@@ -1,3 +1,12 @@
+Content-Type: multipart/mixed; boundary="===============0086047718136476635=="
+MIME-Version: 1.0
+
+--===============0086047718136476635==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="preconfig"
+
 ## This is an example of FortiGate configuration. The following configuration is necessary for the Terraform examples, but users can assign different values for them and add additional settings as needed.
 
 ## In this design, Port1 acts as the public port for internet communication, while Port2 functions as the private port for communication with internal load balancers. Users can adjust these settings to suit your project needs.
@@ -67,6 +76,7 @@ config system central-management
     set fmg ${fmg_integration.ip}
     set serial-number ${fmg_integration.sn}
 end
+
 %{ if fmg_integration.ums != null ~}
 config system auto-scale
     set status enable
@@ -77,12 +87,6 @@ config system auto-scale
     set cloud-mode ums
     set psksecret ${fortigate_autoscale_psksecret}
 end
-%{ if license_type == "payg" ~}
-exec central-mgmt register-device ${fmg_integration.sn} ${fmg_integration.ums.fmg_register_password}
-%{ else ~}
-exec central-mgmt register-device-by-ip ${fmg_integration.ip} ${fmg_integration.ums.api_key}
-exec update-now
-%{ endif ~}
 %{ endif ~}
 %{ endif ~}
 
@@ -134,3 +138,36 @@ end
 
 ## start custom config
 ${custom_config}
+
+
+--===============0086047718136476635==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="license"
+
+LICENSE-TOKEN:DUMMY
+
+
+--===============0086047718136476635==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="postconfig"
+
+%{ if fmg_integration != null ~}
+%{ if fmg_integration.ums != null ~}
+%{ if license_type == "payg" ~}
+exec central-mgmt register-device ${fmg_integration.sn} ${fmg_integration.ums.fmg_register_password}
+%{ else ~}
+%{ if try(tonumber(split(".", trimspace(tostring(image_version)))[0]), 0) >= 8 ~}
+exec central-mgmt register-device-by-address ${fmg_integration.ip} ${fmg_integration.ums.api_key}
+%{ else ~}
+exec central-mgmt register-device-by-ip ${fmg_integration.ip} ${fmg_integration.ums.api_key}
+%{ endif ~}
+exec update-now
+%{ endif ~}
+%{ endif ~}
+%{ endif ~}
+
+--===============0086047718136476635==--

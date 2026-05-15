@@ -7,6 +7,9 @@ locals {
   fortinet_sku_to_versions_map = jsondecode(data.local_file.fortinet_sku_to_versions_map_file.content)
   image_version_valid          = can(local.fortinet_sku_to_versions_map[var.image_sku]) && contains(local.fortinet_sku_to_versions_map[var.image_sku], var.image_version)
 
+  # Use custom SKU if provided, otherwise use the computed image_sku
+  effective_sku = var.sku != null ? var.sku : var.image_sku
+
   # Interface details
   public_interface_names                 = [for nic in var.network_interfaces : nic.name if try(nic.create_pip, false)]
   public_interface_gateway_ip_addresses  = [for nic in var.network_interfaces : nic.gateway_ip_address if try(nic.create_pip, false)]
@@ -24,6 +27,7 @@ locals {
     license_type                         = var.license_type
     fmg_integration                      = var.fmg_integration
     fortigate_autoscale_psksecret        = var.fortigate_autoscale_psksecret
+    image_version                        = var.image_version
   })
 }
 
@@ -89,12 +93,12 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   source_image_reference {
     publisher = "fortinet"
     offer     = "fortinet_fortigate-vm"
-    sku       = var.image_sku
+    sku       = local.effective_sku
     version   = var.image_version
   }
 
   plan {
-    name      = var.image_sku
+    name      = local.effective_sku
     publisher = "fortinet"
     product   = "fortinet_fortigate-vm"
   }
@@ -102,7 +106,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   boot_diagnostics {
   }
 
-  depends_on = [null_resource.validate_image_version]
+  depends_on = [terraform_data.validate_image_version]
 }
 
 resource "azurerm_monitor_autoscale_setting" "autoscale_setting" {
@@ -382,14 +386,12 @@ data "local_file" "fortinet_sku_to_versions_map_file" {
   filename = "${path.module}/fortinet_sku_to_versions_map.json"
 }
 
-resource "null_resource" "validate_image_version" {
-  provisioner "local-exec" {
-    command = <<EOT
-    if ! ${local.image_version_valid}; then
-      echo "Error: Fortinet image version ${var.image_version} not found, please check with the command  az vm image list -o table --all --publisher fortinet --offer fortinet_fortigate-vm to list all the available products!"
-      exit 1
-    fi
-    EOT
+resource "terraform_data" "validate_image_version" {
+  lifecycle {
+    precondition {
+      condition     = var.sku != null || !var.validate_image_version || local.image_version_valid
+      error_message = "Fortinet image version ${var.image_version} not found. Set validate_image_version to false if you intentionally want to use a Marketplace version not listed in this module, or provide a custom SKU via the 'sku' parameter."
+    }
   }
 }
 

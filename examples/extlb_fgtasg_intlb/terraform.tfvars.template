@@ -16,11 +16,18 @@ fortigate_scaleset = {
   byol = {
     # Information used for creating FortiGate VMSS instances
     vmss_name                     = "vmss-byol"
-    image_version                 = "7.6"
+    image_version                 = "8.0.0"
     vm_size                       = "Standard_D2s_v3"
     license_type                  = "byol"
-    gen_type                      = "standard"     # or g2
-    architecture                  = "x64"          # Arm64
+
+    # gen_type and architecture are not needed for v8.0 and later
+    # gen_type                      = "g2"           # or standard for versions earlier than 7.6
+    # architecture                  = "x64"          # Arm64
+
+    # Provide SKU directly via the 'sku' parameter
+    # This bypasses validation and allows using versions not yet in the supported versions map.
+    # Example: sku = "fortinet_fg-vm_payg_76_arm64"
+
     vnet_key                      = "providerVnet" # This value should match the corresponding value in the Load Balancer.
     zones                         = ["1"]
 

@@ -1,4 +1,15 @@
-## 1.0.6 (Unreleased)
+## 1.0.7 (Unreleased)
+
+## 1.0.6 (May 15, 2026)
+
+IMPROVEMENTS:
+
+* Added `validate_image_version` variable to allow users to skip image version validation when using marketplace versions not listed in the supported versions map. This enables support for deprecated versions in existing deployments.
+* Added `sku` variable to the FortiGate scaleset module, allowing power users to provide a custom SKU directly instead of computing it from parameters. This approach automatically bypasses validation and supports image versions not yet in the supported versions map.
+* Updated image version validation logic to support three approaches: validated parameter-based SKU (default), skipped validation with `validate_image_version = false`, or direct custom SKU with the `sku` parameter.
+* Supported FOS v8.0.0 for FortiGate.
+* Updated the terraform.tfvard.template files for the examples to support FortiGate v8.0.0.
+* Used `precondition` in the `terraform_data` resource to address the command issue across different platforms.
 
 ## 1.0.5 (March. 13, 2026)
 IMPROVEMENTS:

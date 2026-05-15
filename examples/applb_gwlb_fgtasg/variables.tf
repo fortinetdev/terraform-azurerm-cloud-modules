@@ -124,6 +124,7 @@ variable "fortigate_scaleset" {
   - license_type                         (Optional|string) The options are `byol` and `payg`.
   - gen_type                             (Optional|string) The generation type for the FortiGate image. Possible values are `standard` and `g2`.
   - architecture                         (Optional|string) The architecture of the FortiGate image. Possible values are `x64` and `Arm64`.
+  - sku                                  (Optional|string) Direct FortiGate SKU specification. When provided, this bypasses the SKU computation from license_type, image_version, gen_type, and architecture parameters.
   - vm_size                                (Required|string) The size of the Virtual Machine Scale Set instances.
   - zones                                (Optional|list(string)) Specifies a list of Availability Zones in which this Linux Virtual Machine Scale Set should be located.
   - vnet_key                             (Required|string) The VNET hosting the fortigate instances.
@@ -183,6 +184,7 @@ EOF
     architecture                  = optional(string)
     license_type                  = optional(string)
     gen_type                      = optional(string)
+    sku                           = optional(string)
     application_insights_id       = optional(string)
     network_interfaces = list(object({
       name                = string

@@ -70,5 +70,13 @@
   "fortinet_fg-vm_payg_76_g2": [
     "7.6.6",
     "latest"
+  ],
+  "fortinet_fg-vm_payg_80": [
+    "8.0.0",
+    "latest"
+  ],
+  "fortinet_fg-vm_byol_80": [
+    "8.0.0",
+    "latest"
   ]
 }

@@ -191,6 +191,12 @@ variable "image_version" {
   type        = string
 }
 
+variable "sku" {
+  description = "FortiGate SKU to use directly. If provided, this will be used instead of `image_sku` and validation against the fortinet_sku_to_versions_map.json will be automatically skipped. Use this to deploy image versions not yet in the supported versions map."
+  type        = string
+  default     = null
+}
+
 variable "application_insights_id" {
   description = "An ID of the Application Insights instance to use for providing metrics for autoscaling."
   type        = string
@@ -313,4 +319,10 @@ variable "tags" {
   description = "Tags for the created resources."
   type        = map(string)
   default     = {}
+}
+
+variable "validate_image_version" {
+  type        = bool
+  default     = true
+  description = "Whether to validate image_version against the bundled Fortinet SKU/version map."
 }

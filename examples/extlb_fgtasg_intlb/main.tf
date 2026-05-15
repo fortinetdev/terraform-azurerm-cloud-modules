@@ -72,9 +72,15 @@ module "fortigate_scaleset" {
       ".",
       ""
     ),
-    lower(try(each.value.gen_type, "standard")) == "g2" ? "_g2" : "",
-    lower(try(each.value.architecture, "")) == "arm64" ? "_arm64" : ""
+    startswith(each.value.image_version, "8.0") ? "" : (
+      lower(try(each.value.gen_type, "")) == "g2" ? "_g2" : ""
+    ),
+    startswith(each.value.image_version, "8.0") ? "" : (
+      lower(try(each.value.architecture, "")) == "arm64" ? "_arm64" : ""
+    )
   )
+
+  sku = try(each.value.sku, null) # Use direct SKU (Approach 2) - set sku in fortigate_scaleset variable
 
   application_insights_id = try(each.value.application_insights_id, null)
   network_interfaces = [for interface in each.value.network_interfaces :

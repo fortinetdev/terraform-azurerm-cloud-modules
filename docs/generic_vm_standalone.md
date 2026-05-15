@@ -9,10 +9,10 @@ To deploy a Fortinet product, the `product_name` and `image_version` parameters 
 
 | Product Name          | Supported Image Versions | Description                              | SKU for the product name                                                     |
 |------------------------|--------------------|------------------------------------------|-----------------------------------------------------------------------------|
-| fortimanager           | 6.2.0 - 7.6.2     | Centralized management for Fortinet devices | fortinet-fortimanager               |
-| fortianalyzer          | 6.2.0 - 7.6.2     | Log management and analytics for Fortinet devices | fortinet-fortianalyzer        |
-| fortiguest             | 2.0.00205         | Guest management solution                | fortinet_fortiguest-vm         |
-| fortiaiops             | 2.0.1, 2.0.2, 2.1.0 | AI-powered operations for Fortinet devices | fortinet_fortiaiops-vm               |
+| fortimanager           | 6.2.0 - 8.0.0     | Centralized management for Fortinet devices | fortinet-fortimanager               |
+| fortianalyzer          | 6.2.0 - 8.0.0     | Log management and analytics for Fortinet devices | fortinet-fortianalyzer        |
+| fortiguest             | 2.0.00205 - 2.4.20520 | Guest management solution                | fortinet_fortiguest-vm         |
+| fortiaiops             | 2.0.1 - 3.2.1 | AI-powered operations for Fortinet devices | fortinet_fortiaiops-vm               |
 | fortigate              | 6.2.0 - 7.6.0     | BYOL Next-generation firewall                 | fortinet_fg-vm                |
 | fortigate-arm64        | 7.2.10 - 7.6.2     | BYOL ARM64-based next-generation firewall     | fortinet_fg-vm_arm64              |
 | fortigate-g2           | 7.6.1, 7.6.2    | BYOL Second-generation next-generation firewall | fortinet_fg-vm_g2                   |
